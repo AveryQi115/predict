@@ -12,9 +12,14 @@
     "axios": "^0.24.0",
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
+    "echarts": "^5.2.2",
+    "jquery": "^3.6.0",
+    "selectize": "^0.12.6",
+    "socket.io-client": "^4.4.0",
     "vue": "^2.6.11",
     "vue-blob-json-csv": "^0.1.7",
-    "vue-router": "^3.5.3"
+    "vue-router": "^3.5.3",
+    "vue-socket.io": "^3.0.10"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

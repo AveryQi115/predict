@@ -62,7 +62,7 @@
                                 </vue-blob-json-csv>
                             </td>
                             <td v-if="pod.monitored">
-                                Monitoring
+                                <b-link class="nav-link" :to="{ path: `/View/${pod.name}`}" replace>Monitoring</b-link>
                             </td>
                             <td v-else>
                                 Default
@@ -157,26 +157,6 @@ export default{
                 console.error(err);
             });
         },
-
-        // addmonitor:function(pod){
-        //     const path="http://localhost:5000/pods";
-        //     axios.post(path,{
-        //         "pod_name":pod.name,
-        //         "pod_ip":pod.label,
-        //         "option":"start",
-        //     })
-        //     .then((res) =>{
-        //         console.log(res.data);
-        //         if (res.data.result==0){
-        //             this.$toast.show(`Monitor Thread Created`);
-        //         } else{
-        //             this.$toast.error(`Create Monitor Thread Failed`);
-        //         }
-        //     })
-        //     .catch((err) =>{
-        //         console.error(err);
-        //     });
-        // },
     },
     created(){
         this.getResponse();

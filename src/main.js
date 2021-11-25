@@ -4,11 +4,19 @@ import { BootstrapVue, IconsPlugin, BFormTimepicker } from 'bootstrap-vue'
 import App from './App.vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import router from "./router/routes.js";
+import router from "./router/routes.js"
+import VueSocketIO from 'vue-socket.io'
+import SocketIO from "socket.io-client"
 
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 Vue.use(VueBlobJsonCsv)
+Vue.use(
+  new VueSocketIO({
+    debug: true ,   // debug调试，生产建议关闭
+    connection: SocketIO("10.60.150.29:5000/test_conn"),
+  })
+)
 Vue.component('b-form-timepicker', BFormTimepicker)
 Vue.config.productionTip = false
 

@@ -4,31 +4,34 @@
 </template>
 
 <script>
-import axios from 'axios';
-export default{
-    data(){
-        return {
-            services:[],
-        };
+  export default {
+    name : 'test',
+    data() {
+      return {
+        graphData:[],
+      }
     },
-    methods:{
-        getResponse(){
-            const path="http://localhost:5000/services";
-            axios.get(path)
-            .then((res) =>{
-                console.log(res.data)
-                this.services=res.data.services;
-            })
-            .catch((err) =>{
-                console.error(err);
-            });
-        },
+    created() {
+      this.$socket.open()
+      this.$socket.emit('message', this.$route.params.pod_name)
+      this.sockets.subscribe('result', data => {
+        console.log('result ', data)
+      }) 
     },
-    created(){
-        this.getResponse();
+    destroyed() {
+      this.$socket.close()
+    },
+    beforeDestroy() {
+      this.sockets.unsubscribe('result')
+    },
+    methods: {
+    },
+    sockets: {
+      result: data => {
+          console.log('result', data)
+      }
     }
-}
-
+  }
 </script>
 
 <style>

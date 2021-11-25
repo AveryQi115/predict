@@ -33,7 +33,7 @@ export default new VueRouter({
             component: Pods,
         },
         {
-            path:'/View',
+            path:'/View/:pod_name',
             name:'View',
             component: View,
         },
