@@ -7,6 +7,35 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import router from "./router/routes.js"
 import VueSocketIO from 'vue-socket.io'
 import SocketIO from "socket.io-client"
+import ECharts from 'vue-echarts'
+import { use } from 'echarts/core'
+
+// import ECharts modules manually to reduce bundle size
+import {
+  CanvasRenderer
+} from 'echarts/renderers'
+import {
+  BarChart,
+  LineChart
+} from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  TitleComponent,
+  LegendComponent,
+  ToolboxComponent
+} from 'echarts/components'
+
+use([
+  CanvasRenderer,
+  BarChart,
+  GridComponent,
+  TooltipComponent,
+  TitleComponent,
+  LegendComponent,
+  ToolboxComponent,
+  LineChart
+]);
 
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
@@ -18,6 +47,7 @@ Vue.use(
   })
 )
 Vue.component('b-form-timepicker', BFormTimepicker)
+Vue.component('v-chart', ECharts)
 Vue.config.productionTip = false
 
 new Vue({

@@ -50,8 +50,6 @@
                             <td>{{pod.label}}</td>
                             <td>
                                 <vue-blob-json-csv
-                                    @success="handleSuccess"
-                                    @error="handleError"
                                     tag-name="div"
                                     file-type="json"
                                     file-name="spec"
