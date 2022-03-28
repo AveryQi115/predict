@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, send
 import _thread
 import sys
+import time
 sys.path.append( "lib" )
 sys.path.append( "lib/monitor" )
 sys.path.append( "lib/client" )
@@ -28,6 +29,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # 全局thread列表，用来控制thread的停止
 QUEST_ARRAY = []
 sending_data_threads = {}
+deploy_thread = None
 
 @app.route('/nodes')
 def Nodes():
@@ -121,7 +123,7 @@ def viewPod(subscribeName):
     print(f"start_new_thread {subscribeName}")
 
     if subscribeName in sending_data_threads.keys():
-        sending_data_threads[subscribeName].join()
+        _async_raise(sending_data_threads[subscribeName].ident,SystemExit)
         del sending_data_threads[subscribeName]
 
     pod_name,predict_model = subscribeName.split('_')
@@ -139,7 +141,7 @@ def stopPreviousSubscribe(subscribeName):
     print(f"[stopPreviousSubscribe] {subscribeName}")
     if subscribeName in sending_data_threads.keys():
         print(f"end_previous_subscribe_thread {subscribeName}")
-        sending_data_threads[subscribeName].join()
+        _async_raise(sending_data_threads[subscribeName].ident,SystemExit)
         del sending_data_threads[subscribeName]
 
 def sending_monitor_thread(subscribe_name, load_data):
@@ -175,8 +177,44 @@ def record_global_data():
     monitor_pods(pod_names)
     return jsonify(node_pods)
 
-@app.route('/test/deploy')
+@socketio.on('deploy',namespace='/test_conn')
 def deploy():
+    node_pod_mappings = getMappingsForNamespace()
+    nodes = []
+    for node,pods in node_pod_mappings.items():
+        nodes.append({"name":node,"pods":pods})
+    socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
+    global deploy_thread
+    deploy_thread = socketio.start_background_task(target=deploy_thread)
+
+@socketio.on('stopDeploy',namespace='/test_conn')
+def stopDeployThread():
+    if deploy_thread is not None:
+        _async_raise(deploy_thread.ident,SystemExit)
+
+def deploy_thread():
+    while True:
+        node_pod_mappings = getMappingsForNamespace()
+        nodes = []
+        for node,pods in node_pod_mappings.items():
+            nodes.append({"name":node,"pods":pods})
+        socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
+
+        pod_names, _ = getPodNamesForNamespace()
+        monitor_threads = monitor_pods(pod_names, True) # clear database
+        socketio.sleep(300)
+
+        node_pod_mappings = getMappingsForNamespace()
+        nodes = []
+        for node,pods in node_pod_mappings.items():
+            nodes.append({"name":node,"pods":pods})
+        socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
+        
+        oneMigration()
+        for T in monitor_threads:
+            _async_raise(T[0], SystemExit)
+
+def oneMigration():
     # 1. initialize state
     pod_names, pod_deployment_mappings = getPodNamesForNamespace()
     pod_names_copy = copy(pod_names)
@@ -189,17 +227,14 @@ def deploy():
     node_deployment_mappings = nodepodmappings_to_nodedeploymentmappings(node_pod_mappings,pod_deployment_mappings)
 
     state = State(deployment_names,node_names,node_deployment_mappings)
-    print('state initialization done')
     
     # 2. initialize model
     actor_model = load_model('../../100server-95')
-    print('load actor model done')
 
     # 3. create one time data
     raw_data = load_dataset_for_namespaced_pods(pod_names)
     deployment_raw_data = poddata_to_deploymentdata(raw_data, pod_deployment_mappings)
     state_data = state.create_state(deployment_raw_data)
-    print('state calculation done')
 
     # 4. get action
     action = actor_model.get_action(state_data)
@@ -210,7 +245,14 @@ def deploy():
 
     # 6. execute migration
     handleMigrationAction(migrations)
-    
+    socketio.sleep(20)
+    pod_names, pod_deployment_mappings = getPodNamesForNamespace()
+    node_pod_mappings = getMappingsForNamespace()
+    node_deployment_mappings = nodepodmappings_to_nodedeploymentmappings(node_pod_mappings,pod_deployment_mappings)
+    for deployment_name,node_name in migrations.items():
+        if deployment_name not in node_deployment_mappings[node_name]:
+            print(f"Error: migrations not successful, migrations={migrations}, new node-deployment mappings={node_deployment_mappings}")
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', debug=True)

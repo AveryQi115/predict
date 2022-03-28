@@ -35,6 +35,8 @@ def getPods(config, nodeGatherer=False):
     if nodeGatherer==False:
         items = []
         for pod in pods:
+            if pod.status.phase != "Running":
+                continue
             item = {}
             item["name"] = pod.metadata.name
             item["label"] = pod.metadata.labels
@@ -44,6 +46,8 @@ def getPods(config, nodeGatherer=False):
     else:
         items = {}
         for pod in pods:
+            if pod.status.phase != "Running":
+                continue
             node = pod.spec.node_name
             item = {}
             item["name"] = pod.metadata.name
@@ -142,16 +146,28 @@ def CreateNewPod(pod_name, node_name, deployment):
 # actions is a dict of PodName: NodeName
 # the PodName has to be a Deployment Name also
 def handleMigrationAction(actions):
+    node_pods = getPods(Config(),nodeGatherer=True)
     for key,value in actions.items():
-        pod_name = key
+        deployment_name = key
         node_name = value
-        exist, pod = checkPodExist(pod_name)
+        exist, deployment_conf = checkPodExist(deployment_name)
         if not exist:
-            print(f"Pod {pod_name} not exists.")
+            print(f"Pod {deployment_name} not exists.")
             continue
 
+        # no need to migrate
+        no_need_to_migrate = False
+        if node_name in node_pods.keys():
+            for pod in node_pods[node_name]:
+                if deployment_name==("-".join(pod["name"].split("-")[:-2])):
+                    no_need_to_migrate = True
+                    print(f"{deployment_name}, {node_name} no need to migrate")
+                    break
+        if no_need_to_migrate:
+            continue
+                    
         if not checkNodeExist(node_name):
             print(f"Node {node_name} not exists.")
             continue
 
-        CreateNewPod(pod_name, node_name, pod)
+        CreateNewPod(deployment_name, node_name, deployment_conf)

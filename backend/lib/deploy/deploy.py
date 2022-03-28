@@ -131,7 +131,12 @@ class State():
             for i in range(POD_NUM):
                 if i not in added['pod_id'].values:
                     request_i = df[(df['start_time']<t) & (df['pod_id']==i)]
-                    request_add = request_i.sort_values('start_time').iloc[len(request_i)-1]
+                    if len(request_i)==0:
+                        print(f"pod_status missing in this time period, pod={self.pods[i]}, step={step},t={t}")
+                        request_i = df[(df['start_time']>=t) & (df['pod_id']==i)]
+                        request_add = request_i.sort_values('start_time').iloc[0]
+                    else:
+                        request_add = request_i.sort_values('start_time').iloc[len(request_i)-1]
                     request_add['start_time'] = t
                     request.loc[len(request)] = request_add
         

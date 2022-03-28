@@ -145,12 +145,15 @@ def monitor_thread(pod_name, startTime, option):
         data_collection(pod_name=pod_name, confObj=confObj, option=option)
         time.sleep(confObj.MONITOR_INTERVAL)
 
-def monitor_pods(pod_names):
+def monitor_pods(pod_names, cleardb=None):
     monitor_pod_threads = []
+    if cleardb is not None:
+        FLAG_CLEARDB = True
     for pod_name in pod_names:
         t_id = _thread.start_new_thread(monitor_thread, (pod_name, 0, ""))
         t_pod = pod_name
         monitor_pod_threads.append([t_id, t_pod])
+    return monitor_pod_threads
 
 # # 终止子线程
 def _async_raise(tid, exctype):
