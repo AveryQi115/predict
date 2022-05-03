@@ -2,7 +2,7 @@
     <div id="app"> 
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">Monitor</a>
+                <a class="navbar-brand" href="#">Dynamic Deployment</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
                 </button>
@@ -15,13 +15,23 @@
                     </b-link>
                     </li>
                     <li class="nav-item">
-                    <b-link class="nav-link" :to="{ path: '/Pods'}" replace>Pods</b-link>
+                    <b-link class="nav-link" :to="{ path: '/Pods'}" replace>Predict</b-link>
                     </li>
                     <li class="nav-item">
-                    <b-link class="nav-link" :to="{ path: '/Services'}" replace>Services</b-link>
+                    <b-link class="nav-link" :to="{ path: '/Nodes'}" replace>Scheduling</b-link>
                     </li>
                     <li class="nav-item">
-                    <b-link class="nav-link" :to="{ path: '/Deployments'}" replace>Deployments</b-link>
+                        <b-dropdown id="dropdown-1" text="Monitor" variant="dark">
+                            <b-dropdown-item>
+                                <b-link class="dropdown-item" :to="{ path: '/Pods'}" replace>Pods</b-link>
+                            </b-dropdown-item>
+                            <b-dropdown-item>
+                                <b-link class="dropdown-item" :to="{ path: '/Services'}" replace>Services</b-link>
+                            </b-dropdown-item>
+                            <b-dropdown-item>
+                                <b-link class="dropdown-item" :to="{ path: '/Deployments'}" replace>Deployments</b-link>
+                            </b-dropdown-item>
+                        </b-dropdown>
                     </li>
                 </ul>
                 </div>

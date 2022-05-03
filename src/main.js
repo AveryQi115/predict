@@ -3,7 +3,9 @@ import VueBlobJsonCsv from 'vue-blob-json-csv';
 import { BootstrapVue, IconsPlugin, BFormTimepicker } from 'bootstrap-vue'
 import App from './App.vue'
 import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap/dist/js/bootstrap.js'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'bootstrap-vue/dist/bootstrap-vue.js'
 import router from "./router/routes.js"
 import VueSocketIO from 'vue-socket.io'
 import SocketIO from "socket.io-client"

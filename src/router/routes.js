@@ -5,6 +5,7 @@ import Deployments from '../components/Deployments.vue';
 import Services from '../components/Services.vue';
 import Pods from '../components/Pods.vue';
 import View from '../components/View.vue';
+import Nodes from '../components/Nodes.vue';
 
 
 Vue.use(VueRouter);
@@ -36,6 +37,11 @@ export default new VueRouter({
             path:'/View/:pod_name',
             name:'View',
             component: View,
+        },
+        {
+            path:'/Nodes',
+            name:'Nodes',
+            component: Nodes,
         },
     ],
 })
