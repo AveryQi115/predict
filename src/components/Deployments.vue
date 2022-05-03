@@ -1,0 +1,108 @@
+<template>
+    <div id="app"> 
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Monitor</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                    <b-link class="nav-link active" :to="{ path: '/'}" replace>Home
+                        <span class="visually-hidden">(current)</span>
+                    </b-link>
+                    </li>
+                    <li class="nav-item">
+                    <b-link class="nav-link" :to="{ path: '/Pods'}" replace>Pods</b-link>
+                    </li>
+                    <li class="nav-item">
+                    <b-link class="nav-link" :to="{ path: '/Services'}" replace>Services</b-link>
+                    </li>
+                    <li class="nav-item">
+                    <b-link class="nav-link" :to="{ path: '/Deployments'}" replace>Deployments</b-link>
+                    </li>
+                </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="page-header">
+                    <h1>View Your Application</h1>
+                </div>
+
+                <div class="bs-component">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th scope="col">Deployment</th>
+                            <th scope="col">Replicas</th>
+                            <th scope="col">Available Replicas</th>
+                            <th scope="col">Templates</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="deployment, index in deployments" :key="index">
+                            <th scope="row">{{deployment.name}}</th>
+                            <td>{{deployment.replicas}}</td>
+                            <td>{{deployment.availble_replicas}}</td>
+                            <td>
+                                <vue-blob-json-csv
+                                    @success="handleSuccess"
+                                    @error="handleError"
+                                    tag-name="div"
+                                    file-type="json"
+                                    file-name="template"
+                                    :data="deployment.template"
+                                    confirm="Do you want to download it?"
+                                >
+                                <button class="btn btn-dark">Download Template</button>
+                                </vue-blob-json-csv>
+                            </td>
+                        </tr>
+                        
+                        </tbody>
+                    </table>
+                </div><!-- /example -->
+            </div>
+        </div>    
+    </div>
+</template>
+
+<script>
+import axios from 'axios';
+export default{
+    data(){
+        return {
+            deployments:[],
+        };
+    },
+    methods:{
+        getResponse(){
+            const path="http://localhost:5000/deployments";
+            axios.get(path)
+            .then((res) =>{
+                console.log(res.data)
+                this.deployments=res.data.deployments;
+            })
+            .catch((err) =>{
+                console.error(err);
+            });
+        },
+    },
+    created(){
+        this.getResponse();
+    }
+}
+
+</script>
+
+<style>
+@import "../../public/bootstrap.min.css";
+.page-header {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+</style>
