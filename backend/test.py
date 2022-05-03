@@ -10,7 +10,7 @@ sys.path.append( "lib/client" )
 sys.path.append( "lib/predict" )
 sys.path.append( "lib/visual" )
 sys.path.append( "lib/deploy")
-from monitor import monitor_thread, _async_raise, monitor_pods
+from monitor import monitor_thread, _async_raise, monitor_pods, queryOnce
 from k8sclient import Config, getPods, getDeployments, getServices, getNodes, getPodNamesForNamespace, getNodeNamesForNamespace, getMappingsForNamespace, handleMigrationAction
 from visual import load_monitor_data, load_predict_data, load_dataset_for_namespaced_pods
 from predict import OT
@@ -29,7 +29,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # 全局thread列表，用来控制thread的停止
 QUEST_ARRAY = []
 sending_data_threads = {}
-deploy_thread = None
+deploy_th = None
 
 @app.route('/nodes')
 def Nodes():
@@ -171,7 +171,7 @@ def predict_thread(pod_name, predict_model):
 def record_global_data():
     config = Config()
     node_pods = getPods(config,True)
-    pod_names = getPodNamesForNamespace()
+    pod_names,_ = getPodNamesForNamespace()
     with open('node_pods.json','w') as f:
         json.dump(node_pods,f)
     monitor_pods(pod_names)
@@ -179,38 +179,38 @@ def record_global_data():
 
 @socketio.on('deploy',namespace='/test_conn')
 def deploy():
-    node_pod_mappings = getMappingsForNamespace()
-    nodes = []
-    for node,pods in node_pod_mappings.items():
-        nodes.append({"name":node,"pods":pods})
-    socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
-    global deploy_thread
-    deploy_thread = socketio.start_background_task(target=deploy_thread)
+    global deploy_th
+    deploy_th = socketio.start_background_task(target=deploy_thread)
 
 @socketio.on('stopDeploy',namespace='/test_conn')
 def stopDeployThread():
-    if deploy_thread is not None:
-        _async_raise(deploy_thread.ident,SystemExit)
+    if deploy_th is not None:
+        _async_raise(deploy_th.ident,SystemExit)
+
+def send_deploy_info(migrations):
+    node_pod_mappings = getMappingsForNamespace()
+    nodes = []
+    for node,pods in node_pod_mappings.items():
+        monitor_datas=[]
+        for pod in pods:
+            monitor_data = queryOnce(pod)
+            if "mem" in monitor_data.keys() and len(monitor_data["mem"])>=1:
+                monitor_data["mem"] = float(monitor_data["mem"][1])/(8*10**9)*100
+            if "cpu" in monitor_data.keys() and len(monitor_data["cpu"])>=1:
+                monitor_data["cpu"] = float(monitor_data["cpu"][1])/4*100
+            monitor_datas.append(monitor_data)
+        nodes.append({"name":node,"pods":pods,"monitor_data":monitor_datas})
+    socketio.emit('deploy_response',{'data':nodes,"migrations":migrations},namespace='/test_conn')
 
 def deploy_thread():
+    migrations={}
     while True:
-        node_pod_mappings = getMappingsForNamespace()
-        nodes = []
-        for node,pods in node_pod_mappings.items():
-            nodes.append({"name":node,"pods":pods})
-        socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
-
+        send_deploy_info(migrations)
         pod_names, _ = getPodNamesForNamespace()
         monitor_threads = monitor_pods(pod_names, True) # clear database
         socketio.sleep(300)
-
-        node_pod_mappings = getMappingsForNamespace()
-        nodes = []
-        for node,pods in node_pod_mappings.items():
-            nodes.append({"name":node,"pods":pods})
-        socketio.emit('deploy_response',{'data':nodes},namespace='/test_conn')
         
-        oneMigration()
+        migrations = oneMigration()
         for T in monitor_threads:
             _async_raise(T[0], SystemExit)
 
@@ -241,7 +241,6 @@ def oneMigration():
     
     # 5. decode action
     migrations = state.decode_action(action[0])
-    print(migrations)
 
     # 6. execute migration
     handleMigrationAction(migrations)
@@ -252,6 +251,8 @@ def oneMigration():
     for deployment_name,node_name in migrations.items():
         if deployment_name not in node_deployment_mappings[node_name]:
             print(f"Error: migrations not successful, migrations={migrations}, new node-deployment mappings={node_deployment_mappings}")
+
+    return migrations
 
 
 if __name__ == '__main__':

@@ -70,15 +70,16 @@ def read_cluster():
     usage_data = {}
     for node,pods in {
         "vm-4c8g-node2":[
-            "buyservice-67dc97d8c6-tcslv",
+            "buyservice-c989f4bd6-28mnk",
             "influxdb-776b79db44-g668h",
-            "storageservice-77566757c9-7lpvq",
-            "timeservice-6d49cb4875-z6m6q",
+            "partservice-5f8f9bd749-52pvl",
+            "storageservice-69df9b8f8c-kx4hq",
             "webapp-d5585d547-kzqn8"
         ],
         "vm-4c8g-node3":[
-            "storageservice-1-588769c495-c4fzn",
-            "tableservice-7554b56f68-4n55v"
+            "storageservice-1-9585bfc6b-g8spv",
+            "tableservice-f64f7b4b7-qwn5h",
+            "timeservice-7fcb68698b-qv4mg"
         ]}.items():
         print(node,pods)
         usage_data[node] = []

@@ -10,7 +10,36 @@ import _thread
 CONFIG_PATH = 'lib/general.conf'
 LOG_PATH = 'lib/monitor/monitor.log'
 
-FLAG_CLEARDB = False   # 布尔变量，决定监控线程在启动时是否清空数据库（建议清空，否则会导致监控数据在时间上不连续）
+FLAG_CLEARDB = True   # 布尔变量，决定监控线程在启动时是否清空数据库（建议清空，否则会导致监控数据在时间上不连续）
+
+def queryOnce(pod_name):
+    confObj = read_config(CONFIG_PATH)
+    mem_data = []
+    MyQuery = 'container_memory_working_set_bytes{pod="'+pod_name+'", container!="POD", container!=""}'
+    result_json = queryProme(MyQuery, confObj)
+    if result_json is None:
+        pass
+    else:
+        result_data = result_json['data']['result']
+        for i in range(len(result_data)):
+            mem_data = result_data[i]['value']
+            break
+
+    # 1.2 查询cpu数据(实时) 
+    cpu_data = []
+    MyQuery = 'sum(rate(container_cpu_usage_seconds_total{pod="' + pod_name + '",container!="",container!="POD"}[1m]))'
+    result_json = queryProme(MyQuery, confObj)
+    if result_json is None:
+        cpu_data = []
+    else:
+        result_data = result_json['data']['result']
+        for i in range(len(result_data)):
+            if 'container' in result_data[i]['metric']: #这条数据为pod中容器的数据
+                pass
+            else: #这条数据为pod数据
+                cpu_data = result_data[i]['value']
+    return {"mem":mem_data,"cpu":cpu_data}
+
 
 def queryProme(expr, confObj):
     """prometheus web查询接口
@@ -66,7 +95,7 @@ def data_collection(pod_name, confObj, option):
     # WARNING: 若要将数据修改为使用率，则POD在创建时必须声明LIMIT值，否则将无法查询到结果！！！
     # 1.1 查询memory数据(实时)
     mem_data = []
-    MyQuery = 'avg((avg (container_memory_working_set_bytes{pod="'+ pod_name + '"}) by (container_name , pod ))/ on (container_name , pod)(avg (container_spec_memory_limit_bytes>0 ) by (container_name, pod)))'
+    MyQuery = 'container_memory_working_set_bytes{pod="'+pod_name+'", container!="POD", container!=""}'
     result_json = queryProme(MyQuery, confObj)
     if result_json is None:
         pass
@@ -74,15 +103,13 @@ def data_collection(pod_name, confObj, option):
         result_data = result_json['data']['result']
         write_log('INFO', f'mem result data: {result_data}', LOG_PATH)
         for i in range(len(result_data)):
-            if 'container' in result_data[i]['metric']: #这条数据为pod中容器的数据
-                pass
-            else: #这条数据为pod数据
-                mem_data = result_data[i]['value']
-                write_log('INFO', f'mem_data: {mem_data}', LOG_PATH)
+            mem_data = result_data[i]['value']
+            write_log('INFO', f'mem_data: {mem_data}', LOG_PATH)
+            break
 
     # 1.2 查询cpu数据(实时) 
     cpu_data = []
-    MyQuery = 'sum(rate(container_cpu_usage_seconds_total{pod="' + pod_name + '"}[1m]))'
+    MyQuery = 'sum(rate(container_cpu_usage_seconds_total{pod="' + pod_name + '",container!="",container!="POD"}[1m]))'
     result_json = queryProme(MyQuery, confObj)
     if result_json is None:
         cpu_data = []

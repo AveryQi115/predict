@@ -151,15 +151,13 @@ class State():
         step = int(df['start_time'].min())
         for t in range(step,step+300,30):
             for node in range(NODE_NUM):
-                node_data = []
+                node_data = np.zeros((POD_NUM,2))
                 node_df = df[df['node_id']==node]
                 node_df = node_df.sort_values('pod_id')
                 for pod_id in node_df['pod_id'].unique():
                     pod_data = node_df[(node_df['start_time']==t) & (node_df['pod_id']==pod_id)]
                     assert len(pod_data)==1, f'{pod_data},{node_df},{t}'
-                    node_data.append([float(pod_data['used_cpu'].values),float(pod_data['used_mem'].values)])
-                for i in range(POD_NUM-len(node_df['pod_id'].unique())):
-                    node_data.append([0.0,0.0])
+                    node_data[pod_id] = np.array([float(pod_data['used_cpu'].values),float(pod_data['used_mem'].values)])
                 ret.append(node_data)
         ret_np = np.array(ret)
         assert ret_np.shape==(10*NODE_NUM,POD_NUM,2),f'{ret_np.shape}'

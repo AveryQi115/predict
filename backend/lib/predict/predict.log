@@ -73,3 +73,11 @@
 [INFO] 2021-12-13 15:41:03 [OT.buyservice-6978f578df-6svnq.lstm] VAR_NUM = 2, res.shape=(1, 3)
 [INFO] 2022-01-04 22:36:20 [predict_thread.buyservice-6978f578df-6svnq.lstm] start predict thread
 [INFO] 2022-01-04 22:36:20 [OT.buyservice-6978f578df-6svnq.lstm] VAR_NUM = 2, res.shape=(65, 3)
+[INFO] 2022-05-03 12:58:30 [predict_thread.buyservice-c989f4bd6-7v25v.lstm] start predict thread
+[INFO] 2022-05-03 12:58:30 [OT.buyservice-c989f4bd6-7v25v.lstm] VAR_NUM = 2, res.shape=(1, 3)
+[INFO] 2022-05-03 12:58:37 [predict_thread.buyservice-c989f4bd6-7v25v.svr] start predict thread
+[INFO] 2022-05-03 12:58:37 [OT.buyservice-c989f4bd6-7v25v.svr] VAR_NUM = 2, res.shape=(1, 3)
+[INFO] 2022-05-03 12:58:41 [predict_thread.buyservice-c989f4bd6-7v25v.rf] start predict thread
+[INFO] 2022-05-03 12:58:41 [OT.buyservice-c989f4bd6-7v25v.rf] VAR_NUM = 2, res.shape=(1, 3)
+[INFO] 2022-05-03 12:59:10 [predict_thread.buyservice-c989f4bd6-7v25v.integration] start predict thread
+[INFO] 2022-05-03 12:59:11 [OT.buyservice-c989f4bd6-7v25v.integration] VAR_NUM = 2, res.shape=(1, 3)
